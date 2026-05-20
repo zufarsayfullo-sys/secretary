@@ -1,1 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finances — S. Zufar</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;padding:0 0 3rem}
+.topbar{background:#1a1f35;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.back-btn{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:8px;padding:.35rem .75rem;color:#fff;text-decoration:none;font-size:13px;display:flex;align-items:center;gap:5px;transition:.15s}
+.back-btn:hover{background:rgba(255,255,255,.18)}
+.topbar-title{font-size:16px;font-weight:500;color:#fff}
+.page{max-width:480px;margin:0 auto;padding:1.25rem}
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.sum-card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:14px;padding:14px 10px;text-align:center}
+.sum-val{font-size:13px;font-weight:500;margin:0;line-height:1.3;word-break:break-all}
+.sum-val.green{color:#3B6D11}.sum-val.red{color:#b91c1c}.sum-val.navy{color:#1a2744}
+.sum-label{font-size:11px;color:#888;margin:4px 0 0}
+.card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:500;color:#1a2744;margin-bottom:1rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-full{margin-bottom:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:12px;color:#888;font-weight:500}
+input,select{width:100%;padding:.6rem .85rem;border:0.5px solid rgba(26,39,68,.15);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1a2744;background:#fafaf9;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:#3B6D11;background:#fff}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;border:0.5px solid rgba(26,39,68,.15);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.type-btn{padding:.6rem;text-align:center;font-size:13px;font-weight:500;cursor:pointer;background:#fafaf9;color:#888;border:none;font-family:'DM Sans',sans-serif;transition:.15s}
+.type-btn.active.income{background:#EAF3DE;color:#3B6D11}
+.type-btn.active.expense{background:#fef2f2;color:#b91c1c}
+.add-btn{width:100%;padding:.75rem;background:#1a1f35;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-top:.5rem;transition:.15s}
+.add-btn:hover{background:#243358}.add-btn:disabled{opacity:.6;cursor:default}
+.section-label{font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin:1.25rem 0 .6rem}
+.entries{display:flex;flex-direction:column;gap:8px}
+.entry{background:#fff;border:0.5px solid rgba(26,39,68,.08);border-radius:12px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:12px}
+.entry-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.entry-dot.income{background:#3B6D11}.entry-dot.expense{background:#b91c1c}
+.entry-info{flex:1;min-width:0}
+.entry-desc{font-size:14px;font-weight:500;color:#1a2744;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-meta{font-size:12px;color:#888;margin-top:1px}
+.entry-amount{font-size:14px;font-weight:500;flex-shrink:0;white-space:nowrap}
+.entry-amount.income{color:#3B6D11}.entry-amount.expense{color:#b91c1c}
+.del-btn{background:none;border:none;cursor:pointer;color:#ddd;font-size:16px;padding:0 0 0 6px;transition:color .15s;flex-shrink:0}
+.del-btn:hover{color:#b91c1c}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1f35;color:#fff;padding:.6rem 1.4rem;border-radius:50px;font-size:13px;font-weight:500;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:#3B6D11}.toast.error{background:#b91c1c}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="back-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </a>
+  <span class="topbar-title">💰 Finances</span>
+</div>
+<div class="page">
+  <div class="summary">
+    <div class="sum-card"><p class="sum-val green" id="total-income">—</p><p class="sum-label">Income (soʻm)</p></div>
+    <div class="sum-card"><p class="sum-val red" id="total-expense">—</p><p class="sum-label">Spent (soʻm)</p></div>
+    <div class="sum-card"><p class="sum-val navy" id="balance">—</p><p class="sum-label">Balance (soʻm)</p></div>
+  </div>
+  <div class="card">
+    <p class="card-title">Add entry</p>
+    <div class="type-toggle">
+      <button class="type-btn active income" id="btn-income" onclick="setType('income')">+ Income</button>
+      <button class="type-btn expense" id="btn-expense" onclick="setType('expense')">− Expense</button>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Amount (soʻm)</label><input type="number" id="f-amount" placeholder="0" min="0"></div>
+      <div class="field"><label>Category</label>
+        <select id="f-cat">
+          <option value="food">🍽 Food</option>
+          <option value="transport">🚌 Transport</option>
+          <option value="education">📚 Education</option>
+          <option value="shopping">🛍 Shopping</option>
+          <option value="health">❤️ Health</option>
+          <option value="salary">💼 Salary</option>
+          <option value="other">📌 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-full"><div class="field"><label>Description</label><input type="text" id="f-desc" placeholder="What was it for?"></div></div>
+    <div class="form-full"><div class="field"><label>Date</label><input type="date" id="f-date"></div></div>
+    <button class="add-btn" id="add-btn" onclick="addEntry()">Add entry</button>
+  </div>
+  <p class="section-label">All entries</p>
+  <div class="entries" id="entries-list"><div class="empty">Loading...</div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SB_URL='https://wpireudvgdzxrehwmvh.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWhobXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const UID='zufar';
+let currentType='income';
+document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
 
+function setType(t){currentType=t;document.getElementById('btn-income').className='type-btn income'+(t==='income'?' active':'');document.getElementById('btn-expense').className='type-btn expense'+(t==='expense'?' active':'')}
+function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');setTimeout(()=>el.className='toast',2500)}
+function fmt(n){return Number(n).toLocaleString('uz-UZ')}
+
+async function addEntry(){
+  const amount=parseInt(document.getElementById('f-amount').value);
+  const desc=document.getElementById('f-desc').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const date=document.getElementById('f-date').value;
+  if(!amount||amount<=0){showToast('Enter a valid amount','error');return}
+  if(!desc){showToast('Enter a description','error');return}
+  const btn=document.getElementById('add-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Saving…';
+  const{error}=await sb.from('finances').insert([{user_id:UID,type:currentType,amount,category:cat,description:desc,date}]);
+  btn.disabled=false;btn.textContent='Add entry';
+  if(error){showToast('Error: '+error.message,'error');return}
+  showToast(currentType==='income'?'Income added ✓':'Expense added ✓','success');
+  document.getElementById('f-amount').value='';
+  document.getElementById('f-desc').value='';
+  loadEntries();
+}
+
+async function deleteEntry(id){
+  if(!confirm('Delete this entry?'))return;
+  await sb.from('finances').delete().eq('id',id);
+  loadEntries();
+}
+
+async function loadEntries(){
+  const{data,error}=await sb.from('finances').select('*').eq('user_id',UID).order('date',{ascending:false}).order('created_at',{ascending:false});
+  if(error){document.getElementById('entries-list').innerHTML='<div class="empty">Failed to load.</div>';return}
+  const entries=data||[];
+  const income=entries.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amount),0);
+  const expense=entries.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amount),0);
+  const bal=income-expense;
+  document.getElementById('total-income').textContent=fmt(income);
+  document.getElementById('total-expense').textContent=fmt(expense);
+  const balEl=document.getElementById('balance');
+  balEl.textContent=fmt(Math.abs(bal));
+  balEl.className='sum-val '+(bal>=0?'green':'red');
+  const list=document.getElementById('entries-list');
+  if(entries.length===0){list.innerHTML='<div class="empty">No entries yet. Add your first one above.</div>';return}
+  const catEmoji={food:'🍽',transport:'🚌',education:'📚',shopping:'🛍',health:'❤️',salary:'💼',other:'📌'};
+  list.innerHTML=entries.map(e=>`
+    <div class="entry">
+      <div class="entry-dot ${e.type}"></div>
+      <div class="entry-info">
+        <div class="entry-desc">${catEmoji[e.category]||'📌'} ${e.description}</div>
+        <div class="entry-meta">${e.category} · ${e.date}</div>
+      </div>
+      <span class="entry-amount ${e.type}">${e.type==='income'?'+':'-'}${fmt(e.amount)} soʻm</span>
+      <button class="del-btn" onclick="deleteEntry('${e.id}')">✕</button>
+    </div>`).join('');
+}
+loadEntries();
+</script>
+</body>
+</html>
