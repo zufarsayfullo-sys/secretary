@@ -1,1 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics — S. Zufar</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;padding:0 0 3rem}
+.topbar{background:#1a1f35;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.back-btn{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:8px;padding:.35rem .75rem;color:#fff;text-decoration:none;font-size:13px;display:flex;align-items:center;gap:5px;transition:.15s}
+.back-btn:hover{background:rgba(255,255,255,.18)}
+.topbar-title{font-size:16px;font-weight:500;color:#fff}
+.page{max-width:520px;margin:0 auto;padding:1.25rem}
+.period-row{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.period-btn{background:#fff;border:0.5px solid rgba(26,39,68,.12);border-radius:50px;padding:.3rem .9rem;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:#888;transition:.15s}
+.period-btn.active{background:#1a1f35;color:#fff;border-color:#1a1f35}
+.big-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.big-card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.1rem 1.25rem}
+.big-card-label{font-size:12px;color:#888;margin-bottom:6px}
+.big-card-val{font-size:18px;font-weight:500;color:#1a2744;line-height:1.3;word-break:break-all}
+.big-card-sub{font-size:11px;color:#aaa;margin-top:4px}
+.big-card.green .big-card-val{color:#3B6D11}.big-card.red .big-card-val{color:#b91c1c}
+.big-card.purple .big-card-val{color:#534AB7}.big-card.coral .big-card-val{color:#993C1D}
+.chart-card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+.chart-card-title{font-size:14px;font-weight:500;color:#1a2744;margin-bottom:1rem}
+.chart-wrap{position:relative;height:200px}
+.cat-row{display:flex;align-items:center;gap:10px;margin-bottom:.65rem}
+.cat-label{font-size:13px;color:#1a2744;min-width:90px;flex-shrink:0}
+.cat-bar-wrap{flex:1;background:#f0ede8;border-radius:50px;height:7px;overflow:hidden}
+.cat-bar{height:100%;border-radius:50px;transition:width .5s}
+.cat-val{font-size:12px;color:#888;min-width:100px;text-align:right;white-space:nowrap}
+.history-card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+.tab-row{display:flex;gap:6px;margin-bottom:.85rem}
+.tab-btn{background:#f0ede8;border:none;border-radius:8px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:#888;transition:.15s}
+.tab-btn.active{background:#1a1f35;color:#fff}
+.hist-entry{display:flex;align-items:center;gap:10px;padding:.6rem 0;border-bottom:0.5px solid rgba(26,39,68,.06)}
+.hist-entry:last-child{border-bottom:none}
+.hist-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.hist-dot.income{background:#3B6D11}.hist-dot.expense{background:#b91c1c}
+.hist-dot.done{background:#3B6D11}.hist-dot.pending{background:#c9922a}
+.hist-info{flex:1;min-width:0}
+.hist-title{font-size:13px;font-weight:500;color:#1a2744;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-meta{font-size:11px;color:#aaa;margin-top:1px}
+.hist-right{font-size:13px;font-weight:500;flex-shrink:0;white-space:nowrap}
+.hist-right.income{color:#3B6D11}.hist-right.expense{color:#b91c1c}
+.hist-right.done{color:#3B6D11}.hist-right.pending{color:#c9922a}
+.empty{text-align:center;padding:1.5rem;color:#aaa;font-size:13px}
+.section-label{font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="back-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </a>
+  <span class="topbar-title">📊 Statistics</span>
+</div>
+<div class="page">
+  <div class="period-row">
+    <button class="period-btn active" onclick="setPeriod('week',this)">This week</button>
+    <button class="period-btn" onclick="setPeriod('month',this)">This month</button>
+    <button class="period-btn" onclick="setPeriod('all',this)">All time</button>
+  </div>
+  <div class="big-stats">
+    <div class="big-card green"><p class="big-card-label">Total income</p><p class="big-card-val" id="bs-income">—</p><p class="big-card-sub">soʻm</p></div>
+    <div class="big-card red"><p class="big-card-label">Total spent</p><p class="big-card-val" id="bs-expense">—</p><p class="big-card-sub">soʻm</p></div>
+    <div class="big-card purple"><p class="big-card-label">Study tasks done</p><p class="big-card-val" id="bs-study">—</p><p class="big-card-sub">completed</p></div>
+    <div class="big-card coral"><p class="big-card-label">Personal tasks done</p><p class="big-card-val" id="bs-tasks">—</p><p class="big-card-sub">completed</p></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card-title">Daily spending — last 7 days (soʻm)</p>
+    <div class="chart-wrap"><canvas id="spending-chart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card-title">Spending by category</p>
+    <div id="cat-breakdown"><div class="empty">No expense data.</div></div>
+  </div>
+  <div class="chart-card">
+    <p class="chart-card-title">Tasks overview</p>
+    <div class="chart-wrap"><canvas id="tasks-chart"></canvas></div>
+  </div>
+  <div class="history-card">
+    <p class="section-label">Full history</p>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="setTab('finance',this)">Finance</button>
+      <button class="tab-btn" onclick="setTab('study',this)">Study</button>
+      <button class="tab-btn" onclick="setTab('tasks',this)">Tasks</button>
+    </div>
+    <div id="hist-list"><div class="empty">Loading...</div></div>
+  </div>
+</div>
+<script>
+const SB_URL='https://wpireudvgdzxrehwmvh.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWhobXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const UID='zufar';
+let period='week',tab='finance',spChart=null,tChart=null;
+const fmt=n=>Number(n).toLocaleString('uz-UZ');
 
+function setPeriod(p,btn){period=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAll()}
+function setTab(t,btn){tab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderHistory()}
+
+function sinceDate(){
+  const now=new Date();
+  if(period==='week'){const d=new Date(now);d.setDate(now.getDate()-6);return d.toISOString().slice(0,10)}
+  if(period==='month')return new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+  return '2000-01-01';
+}
+
+async function renderAll(){
+  const since=sinceDate();
+  const[finRes,studyRes,tasksRes]=await Promise.all([
+    sb.from('finances').select('*').eq('user_id',UID).gte('date',since),
+    sb.from('study_tasks').select('*').eq('user_id',UID),
+    sb.from('personal_tasks').select('*').eq('user_id',UID)
+  ]);
+  const fin=finRes.data||[],study=studyRes.data||[],tasks=tasksRes.data||[];
+  const income=fin.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amount),0);
+  const expense=fin.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amount),0);
+  document.getElementById('bs-income').textContent=fmt(income);
+  document.getElementById('bs-expense').textContent=fmt(expense);
+  document.getElementById('bs-study').textContent=study.filter(t=>t.done).length;
+  document.getElementById('bs-tasks').textContent=tasks.filter(t=>t.done).length;
+  renderSpendingChart(fin);
+  renderCatBreakdown(fin);
+  renderTasksChart(study,tasks);
+  renderHistory();
+}
+
+function renderSpendingChart(fin){
+  const now=new Date();
+  const days=[],labels=[];
+  for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);const s=d.toISOString().slice(0,10);days.push(s);labels.push(s.slice(5))}
+  const expData=days.map(d=>fin.filter(e=>e.type==='expense'&&e.date===d).reduce((s,e)=>s+Number(e.amount),0));
+  const incData=days.map(d=>fin.filter(e=>e.type==='income'&&e.date===d).reduce((s,e)=>s+Number(e.amount),0));
+  if(spChart)spChart.destroy();
+  spChart=new Chart(document.getElementById('spending-chart').getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Income',data:incData,backgroundColor:'rgba(59,109,17,0.7)',borderRadius:5},
+      {label:'Expense',data:expData,backgroundColor:'rgba(185,28,28,0.65)',borderRadius:5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:12},boxWidth:12}}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11}}},
+        y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{family:'DM Sans',size:11},callback:v=>v>0?fmt(v):'0'}}}}
+  });
+}
+
+function renderCatBreakdown(fin){
+  const expenses=fin.filter(e=>e.type==='expense');
+  const total=expenses.reduce((s,e)=>s+Number(e.amount),0);
+  const cats={};expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+Number(e.amount)});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const colors={food:'#3B6D11',transport:'#534AB7',education:'#0F6E56',shopping:'#993C1D',health:'#0C447C',salary:'#853F12',other:'#888'};
+  const el=document.getElementById('cat-breakdown');
+  if(!sorted.length){el.innerHTML='<div class="empty">No expense data.</div>';return}
+  el.innerHTML=sorted.map(([cat,amt])=>`
+    <div class="cat-row">
+      <span class="cat-label">${cat}</span>
+      <div class="cat-bar-wrap"><div class="cat-bar" style="width:${total>0?Math.round(amt/total*100):0}%;background:${colors[cat]||'#888'}"></div></div>
+      <span class="cat-val">${fmt(amt)} soʻm</span>
+    </div>`).join('');
+}
+
+function renderTasksChart(study,tasks){
+  if(tChart)tChart.destroy();
+  tChart=new Chart(document.getElementById('tasks-chart').getContext('2d'),{
+    type:'doughnut',
+    data:{
+      labels:['Study done','Study pending','Tasks done','Tasks pending'],
+      datasets:[{data:[study.filter(t=>t.done).length,study.filter(t=>!t.done).length,tasks.filter(t=>t.done).length,tasks.filter(t=>!t.done).length],
+        backgroundColor:['#534AB7','rgba(83,74,183,0.22)','#993C1D','rgba(153,60,29,0.22)'],borderWidth:0}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{position:'right',labels:{font:{family:'DM Sans',size:12},boxWidth:12}}}}
+  });
+}
+
+async function renderHistory(){
+  const list=document.getElementById('hist-list');
+  list.innerHTML='<div class="empty">Loading...</div>';
+  const since=sinceDate();
+  if(tab==='finance'){
+    const{data}=await sb.from('finances').select('*').eq('user_id',UID).gte('date',since).order('date',{ascending:false});
+    const fin=data||[];
+    if(!fin.length){list.innerHTML='<div class="empty">No finance entries.</div>';return}
+    list.innerHTML=fin.map(e=>`
+      <div class="hist-entry">
+        <div class="hist-dot ${e.type}"></div>
+        <div class="hist-info"><div class="hist-title">${e.description||e.category}</div><div class="hist-meta">${e.category} · ${e.date}</div></div>
+        <span class="hist-right ${e.type}">${e.type==='income'?'+':'-'}${fmt(e.amount)} soʻm</span>
+      </div>`).join('');
+  } else if(tab==='study'){
+    const{data}=await sb.from('study_tasks').select('*').eq('user_id',UID).order('created_at',{ascending:false});
+    const items=data||[];
+    if(!items.length){list.innerHTML='<div class="empty">No study tasks.</div>';return}
+    list.innerHTML=items.map(t=>`
+      <div class="hist-entry">
+        <div class="hist-dot ${t.done?'done':'pending'}"></div>
+        <div class="hist-info"><div class="hist-title">${t.title}</div><div class="hist-meta">${t.subject||''}${t.duration?' · '+t.duration+' min':''}${t.date?' · '+t.date:''}</div></div>
+        <span class="hist-right ${t.done?'done':'pending'}">${t.done?'Done':'Pending'}</span>
+      </div>`).join('');
+  } else {
+    const{data}=await sb.from('personal_tasks').select('*').eq('user_id',UID).order('created_at',{ascending:false});
+    const items=data||[];
+    if(!items.length){list.innerHTML='<div class="empty">No personal tasks.</div>';return}
+    list.innerHTML=items.map(t=>`
+      <div class="hist-entry">
+        <div class="hist-dot ${t.done?'done':'pending'}"></div>
+        <div class="hist-info"><div class="hist-title">${t.title}</div><div class="hist-meta">${t.category||''}${t.date?' · '+t.date:''}</div></div>
+        <span class="hist-right ${t.done?'done':'pending'}">${t.done?'Done':'Pending'}</span>
+      </div>`).join('');
+  }
+}
+renderAll();
+</script>
+</body>
+</html>
