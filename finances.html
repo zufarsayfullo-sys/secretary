@@ -20,6 +20,32 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;paddin
 .sum-val{font-size:13px;font-weight:500;margin:0;line-height:1.3;word-break:break-all}
 .sum-val.green{color:#3B6D11}.sum-val.red{color:#b91c1c}.sum-val.navy{color:#1a2744}
 .sum-label{font-size:11px;color:#888;margin:4px 0 0}
+
+/* SAVINGS BANK */
+.savings-card{background:linear-gradient(135deg,#1a1f35,#26215C);border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;color:#fff;position:relative;overflow:hidden}
+.savings-blob{position:absolute;right:-20px;bottom:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none}
+.savings-blob2{position:absolute;right:40px;top:-30px;width:70px;height:70px;border-radius:50%;background:rgba(159,151,232,.15);pointer-events:none}
+.savings-label{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.savings-amount{font-size:28px;font-weight:500;color:#fff;margin-bottom:.25rem;word-break:break-all}
+.savings-sub{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:1.1rem}
+.savings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.savings-input-wrap{display:flex;gap:6px;align-items:center}
+.savings-input{flex:1;padding:.5rem .75rem;border:0.5px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:.15s;width:100%}
+.savings-input::placeholder{color:rgba(255,255,255,.35)}
+.savings-input:focus{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.15)}
+.sav-btn{padding:.5rem .9rem;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap}
+.sav-btn.add{background:#7DC855;color:#fff}
+.sav-btn.add:hover{background:#5fa83e}
+.sav-btn.remove{background:rgba(185,28,28,.7);color:#fff}
+.sav-btn.remove:hover{background:#b91c1c}
+.savings-history{margin-top:.85rem;border-top:0.5px solid rgba(255,255,255,.1);padding-top:.75rem}
+.savings-history-title{font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.sav-entry{display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;font-size:12px;border-bottom:0.5px solid rgba(255,255,255,.06)}
+.sav-entry:last-child{border-bottom:none}
+.sav-entry-desc{color:rgba(255,255,255,.6)}
+.sav-entry-amt.plus{color:#7DC855}.sav-entry-amt.minus{color:#ff8a8a}
+.sav-empty{font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:.5rem 0}
+
 .card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
 .card-title{font-size:14px;font-weight:500;color:#1a2744;margin-bottom:1rem}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -62,12 +88,46 @@ input:focus,select:focus{border-color:#3B6D11;background:#fff}
   </a>
   <span class="topbar-title">💰 Finances</span>
 </div>
+
 <div class="page">
+
+  <!-- SUMMARY -->
   <div class="summary">
     <div class="sum-card"><p class="sum-val green" id="total-income">—</p><p class="sum-label">Income (soʻm)</p></div>
     <div class="sum-card"><p class="sum-val red" id="total-expense">—</p><p class="sum-label">Spent (soʻm)</p></div>
     <div class="sum-card"><p class="sum-val navy" id="balance">—</p><p class="sum-label">Balance (soʻm)</p></div>
   </div>
+
+  <!-- SAVINGS BANK -->
+  <div class="savings-card">
+    <div class="savings-blob"></div>
+    <div class="savings-blob2"></div>
+    <div class="savings-label">🏦 Savings bank</div>
+    <div class="savings-amount" id="savings-amount">0</div>
+    <div class="savings-sub">soʻm saved</div>
+    <div class="savings-actions">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Add money</div>
+        <div class="savings-input-wrap">
+          <input class="savings-input" type="number" id="sav-add-amount" placeholder="Amount">
+          <button class="sav-btn add" onclick="savingsAdd()">+</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px">Remove money</div>
+        <div class="savings-input-wrap">
+          <input class="savings-input" type="number" id="sav-remove-amount" placeholder="Amount">
+          <button class="sav-btn remove" onclick="savingsRemove()">−</button>
+        </div>
+      </div>
+    </div>
+    <div class="savings-history">
+      <div class="savings-history-title">Recent</div>
+      <div id="sav-history"></div>
+    </div>
+  </div>
+
+  <!-- ADD ENTRY -->
   <div class="card">
     <p class="card-title">Add entry</p>
     <div class="type-toggle">
@@ -92,22 +152,66 @@ input:focus,select:focus{border-color:#3B6D11;background:#fff}
     <div class="form-full"><div class="field"><label>Date</label><input type="date" id="f-date"></div></div>
     <button class="add-btn" id="add-btn" onclick="addEntry()">Add entry</button>
   </div>
+
   <p class="section-label">All entries</p>
   <div class="entries" id="entries-list"><div class="empty">Loading...</div></div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
-const SB_URL='https://wpireudvgdzzxrehhmvh.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWhobXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
+const SB_URL='https://wpireudvgdzzxrehwmvh.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWh3bXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
 const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const UID='zufar';
 let currentType='income';
+// savings stored in localStorage (simple, no table needed)
+let savings=JSON.parse(localStorage.getItem('zufar_savings')||'{"balance":0,"history":[]}');
+
 document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
 
 function setType(t){currentType=t;document.getElementById('btn-income').className='type-btn income'+(t==='income'?' active':'');document.getElementById('btn-expense').className='type-btn expense'+(t==='expense'?' active':'')}
 function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');setTimeout(()=>el.className='toast',2500)}
 function fmt(n){return Number(n).toLocaleString('uz-UZ')}
 
+// ── SAVINGS ──────────────────────────────────────
+function saveSavings(){localStorage.setItem('zufar_savings',JSON.stringify(savings));renderSavings()}
+
+function savingsAdd(){
+  const amt=parseInt(document.getElementById('sav-add-amount').value);
+  if(!amt||amt<=0){showToast('Enter a valid amount','error');return}
+  savings.balance+=amt;
+  savings.history.unshift({type:'add',amount:amt,date:new Date().toISOString().slice(0,10)});
+  if(savings.history.length>10)savings.history=savings.history.slice(0,10);
+  document.getElementById('sav-add-amount').value='';
+  saveSavings();
+  showToast('+'+fmt(amt)+' soʻm added to savings ✓','success');
+}
+
+function savingsRemove(){
+  const amt=parseInt(document.getElementById('sav-remove-amount').value);
+  if(!amt||amt<=0){showToast('Enter a valid amount','error');return}
+  if(amt>savings.balance){showToast('Not enough savings','error');return}
+  savings.balance-=amt;
+  savings.history.unshift({type:'remove',amount:amt,date:new Date().toISOString().slice(0,10)});
+  if(savings.history.length>10)savings.history=savings.history.slice(0,10);
+  document.getElementById('sav-remove-amount').value='';
+  saveSavings();
+  showToast('-'+fmt(amt)+' soʻm removed from savings','success');
+}
+
+function renderSavings(){
+  document.getElementById('savings-amount').textContent=fmt(savings.balance);
+  const hist=document.getElementById('sav-history');
+  if(!savings.history.length){hist.innerHTML='<div class="sav-empty">No transactions yet</div>';return}
+  hist.innerHTML=savings.history.map(h=>`
+    <div class="sav-entry">
+      <span class="sav-entry-desc">${h.type==='add'?'Deposited':'Withdrawn'} · ${h.date}</span>
+      <span class="sav-entry-amt ${h.type==='add'?'plus':'minus'}">${h.type==='add'?'+':'-'}${fmt(h.amount)} soʻm</span>
+    </div>`).join('');
+}
+
+// ── FINANCES ─────────────────────────────────────
 async function addEntry(){
   const amount=parseInt(document.getElementById('f-amount').value);
   const desc=document.getElementById('f-desc').value.trim();
@@ -145,7 +249,7 @@ async function loadEntries(){
   balEl.textContent=fmt(Math.abs(bal));
   balEl.className='sum-val '+(bal>=0?'green':'red');
   const list=document.getElementById('entries-list');
-  if(entries.length===0){list.innerHTML='<div class="empty">No entries yet. Add your first one above.</div>';return}
+  if(!entries.length){list.innerHTML='<div class="empty">No entries yet.</div>';return}
   const catEmoji={food:'🍽',transport:'🚌',education:'📚',shopping:'🛍',health:'❤️',salary:'💼',other:'📌'};
   list.innerHTML=entries.map(e=>`
     <div class="entry">
@@ -158,6 +262,8 @@ async function loadEntries(){
       <button class="del-btn" onclick="deleteEntry('${e.id}')">✕</button>
     </div>`).join('');
 }
+
+renderSavings();
 loadEntries();
 </script>
 </body>
