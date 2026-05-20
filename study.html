@@ -1,1 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Tasks — S. Zufar</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;padding:0 0 3rem}
+.topbar{background:#26215C;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:100}
+.back-btn{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:8px;padding:.35rem .75rem;color:#fff;text-decoration:none;font-size:13px;display:flex;align-items:center;gap:5px;transition:.15s}
+.back-btn:hover{background:rgba(255,255,255,.18)}
+.topbar-title{font-size:16px;font-weight:500;color:#fff}
+.page{max-width:480px;margin:0 auto;padding:1.25rem}
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.sum-card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:14px;padding:14px 10px;text-align:center}
+.sum-val{font-size:22px;font-weight:500;margin:0}.sum-label{font-size:11px;color:#888;margin:4px 0 0}
+.sum-val.purple{color:#534AB7}.sum-val.green{color:#3B6D11}.sum-val.gray{color:#888}
+.card{background:#fff;border:0.5px solid rgba(26,39,68,.1);border-radius:16px;padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:14px;font-weight:500;color:#1a2744;margin-bottom:1rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-full{margin-bottom:10px}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:12px;color:#888;font-weight:500}
+input,select{width:100%;padding:.6rem .85rem;border:0.5px solid rgba(26,39,68,.15);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:#1a2744;background:#fafaf9;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:#534AB7;background:#fff}
+.add-btn{width:100%;padding:.75rem;background:#26215C;color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-top:.5rem;transition:.15s}
+.add-btn:hover{background:#534AB7}.add-btn:disabled{opacity:.6;cursor:default}
+.section-label{font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin:1.25rem 0 .6rem}
+.tasks-list{display:flex;flex-direction:column;gap:8px}
+.task-item{background:#fff;border:0.5px solid rgba(26,39,68,.08);border-radius:12px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:12px;transition:.15s}
+.task-item.done{opacity:.55}
+.task-check{width:22px;height:22px;border-radius:50%;border:2px solid #AFA9EC;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s;background:#fff;user-select:none}
+.task-check.checked{background:#534AB7;border-color:#534AB7;color:#fff;font-size:12px}
+.task-info{flex:1;min-width:0}
+.task-title{font-size:14px;font-weight:500;color:#1a2744;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-item.done .task-title{text-decoration:line-through;color:#aaa}
+.task-meta{font-size:12px;color:#888;margin-top:1px}
+.priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.p-high{background:#b91c1c}.p-medium{background:#c9922a}.p-low{background:#3B6D11}
+.del-btn{background:none;border:none;cursor:pointer;color:#ddd;font-size:16px;padding:0 0 0 4px;transition:color .15s;flex-shrink:0}
+.del-btn:hover{color:#b91c1c}
+.empty{text-align:center;padding:2rem;color:#aaa;font-size:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#26215C;color:#fff;padding:.6rem 1.4rem;border-radius:50px;font-size:13px;font-weight:500;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:#3B6D11}.toast.error{background:#b91c1c}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="index.html" class="back-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </a>
+  <span class="topbar-title">📚 Study Tasks</span>
+</div>
+<div class="page">
+  <div class="summary">
+    <div class="sum-card"><p class="sum-val purple" id="total-tasks">—</p><p class="sum-label">Total</p></div>
+    <div class="sum-card"><p class="sum-val green" id="done-tasks">—</p><p class="sum-label">Done</p></div>
+    <div class="sum-card"><p class="sum-val gray" id="pending-tasks">—</p><p class="sum-label">Pending</p></div>
+  </div>
+  <div class="card">
+    <p class="card-title">Add study task</p>
+    <div class="form-full"><div class="field"><label>Task title</label><input type="text" id="t-title" placeholder="e.g. IELTS Reading Practice Test 3"></div></div>
+    <div class="form-grid">
+      <div class="field"><label>Subject</label>
+        <select id="t-subject">
+          <option>IELTS</option><option>English</option><option>Maths</option><option>Programming</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Priority</label>
+        <select id="t-priority">
+          <option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Due date</label><input type="date" id="t-date"></div>
+      <div class="field"><label>Duration (min)</label><input type="number" id="t-duration" placeholder="60" min="1"></div>
+    </div>
+    <div class="form-full"><div class="field"><label>Notes (optional)</label><input type="text" id="t-notes" placeholder="Any notes..."></div></div>
+    <button class="add-btn" id="add-btn" onclick="addTask()">Add task</button>
+  </div>
+  <p class="section-label">All study tasks</p>
+  <div class="tasks-list" id="tasks-list"><div class="empty">Loading...</div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const SB_URL='https://wpireudvgdzxrehwmvh.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWhobXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const UID='zufar';
+document.getElementById('t-date').value=new Date().toISOString().slice(0,10);
+function showToast(msg,type=''){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');setTimeout(()=>el.className='toast',2500)}
 
+async function addTask(){
+  const title=document.getElementById('t-title').value.trim();
+  const subject=document.getElementById('t-subject').value;
+  const priority=document.getElementById('t-priority').value;
+  const date=document.getElementById('t-date').value||null;
+  const duration=parseInt(document.getElementById('t-duration').value)||null;
+  const notes=document.getElementById('t-notes').value.trim()||null;
+  if(!title){showToast('Enter a task title','error');return}
+  const btn=document.getElementById('add-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Saving…';
+  const{error}=await sb.from('study_tasks').insert([{user_id:UID,title,subject,priority,date,duration,notes,done:false}]);
+  btn.disabled=false;btn.textContent='Add task';
+  if(error){showToast('Error: '+error.message,'error');return}
+  showToast('Task added ✓','success');
+  document.getElementById('t-title').value='';document.getElementById('t-notes').value='';document.getElementById('t-duration').value='';
+  loadTasks();
+}
+
+async function toggleTask(id,done){
+  await sb.from('study_tasks').update({done:!done}).eq('id',id);
+  loadTasks();
+}
+async function deleteTask(id){
+  if(!confirm('Delete this task?'))return;
+  await sb.from('study_tasks').delete().eq('id',id);
+  loadTasks();
+}
+
+async function loadTasks(){
+  const{data}=await sb.from('study_tasks').select('*').eq('user_id',UID).order('created_at',{ascending:false});
+  const tasks=data||[];
+  document.getElementById('total-tasks').textContent=tasks.length;
+  document.getElementById('done-tasks').textContent=tasks.filter(t=>t.done).length;
+  document.getElementById('pending-tasks').textContent=tasks.filter(t=>!t.done).length;
+  const list=document.getElementById('tasks-list');
+  if(tasks.length===0){list.innerHTML='<div class="empty">No study tasks yet.</div>';return}
+  const pc={high:'p-high',medium:'p-medium',low:'p-low'};
+  list.innerHTML=tasks.map(t=>`
+    <div class="task-item ${t.done?'done':''}">
+      <div class="task-check ${t.done?'checked':''}" onclick="toggleTask('${t.id}',${t.done})">${t.done?'✓':''}</div>
+      <div class="priority-dot ${pc[t.priority]}"></div>
+      <div class="task-info">
+        <div class="task-title">${t.title}</div>
+        <div class="task-meta">${t.subject||''}${t.duration?' · '+t.duration+' min':''}${t.date?' · '+t.date:''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteTask('${t.id}')">✕</button>
+    </div>`).join('');
+}
+loadTasks();
+</script>
+</body>
+</html>
