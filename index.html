@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>S. Zufar — Dashboard</title>
 <link rel="icon" href="data:,">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
 .wrap{width:100%;max-width:420px}
-
-/* HERO */
 .hero{background:#1a1f35;border-radius:20px 20px 0 0;padding:1.75rem 1.5rem 2.25rem;position:relative;overflow:hidden}
 .b1{position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(83,74,183,.35);pointer-events:none}
 .b2{position:absolute;bottom:-30px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(59,109,17,.3);pointer-events:none}
@@ -22,56 +21,36 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;displa
 .hero-name{font-size:21px;font-weight:500;color:#fff;margin:0}
 .hero-date{font-size:12px;color:rgba(255,255,255,.4);margin:4px 0 0}
 .avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#534AB7,#3B6D11);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:#fff;border:2px solid rgba(255,255,255,.15);flex-shrink:0}
-
-/* STATS */
 .stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.stat{background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 8px;text-align:center}
-.stat-val{font-size:18px;font-weight:500;line-height:1;margin:0}
+.stat{background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 8px;text-align:center;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.stat-val{font-size:16px;font-weight:500;line-height:1.2;margin:0;word-break:break-all}
 .stat-val.green{color:#7DC855}.stat-val.purple{color:#9F97E8}.stat-val.coral{color:#E8896A}
 .stat-label{font-size:11px;color:rgba(255,255,255,.45);margin:5px 0 0}
 .stat-sub{font-size:10px;color:rgba(255,255,255,.28);margin:2px 0 0}
-
-/* BODY */
 .body{background:#fff;border-radius:0 0 20px 20px;padding:1.25rem 1.25rem 1.5rem;border:0.5px solid rgba(26,39,68,.08);border-top:none}
 .sec-label{font-size:11px;color:#888;letter-spacing:.07em;text-transform:uppercase;margin:0 0 10px}
-
-/* NAV CARDS */
 .nav-cards{display:flex;flex-direction:column;gap:9px;margin-bottom:1.25rem}
-.nc{border-radius:14px;padding:1.1rem 1.2rem;display:flex;align-items:center;gap:14px;cursor:pointer;text-decoration:none;position:relative;overflow:hidden;transition:transform .18s,box-shadow .18s}
+.nc{border-radius:14px;padding:1.1rem 1.2rem;display:flex;align-items:center;gap:14px;cursor:pointer;text-decoration:none;position:relative;overflow:hidden;transition:transform .18s}
 .nc:hover{transform:translateX(3px)}
 .nc.green{background:#EAF3DE;border:0.5px solid #C0DD97}
 .nc.purple{background:#EEEDFE;border:0.5px solid #AFA9EC}
 .nc.coral{background:#FAECE7;border:0.5px solid #F5C4B3}
-.nc.stats-card{background:#1a1f35;border:0.5px solid rgba(255,255,255,.12)}
+.nc.dark{background:#1a1f35;border:0.5px solid rgba(255,255,255,.12)}
 .blob{position:absolute;right:-18px;bottom:-18px;width:90px;height:90px;border-radius:50%;pointer-events:none}
-.nc.green .blob{background:rgba(99,153,34,.13)}
-.nc.purple .blob{background:rgba(127,119,221,.13)}
-.nc.coral .blob{background:rgba(216,90,48,.11)}
-.nc.stats-card .blob{background:rgba(255,255,255,.05)}
+.nc.green .blob{background:rgba(99,153,34,.13)}.nc.purple .blob{background:rgba(127,119,221,.13)}
+.nc.coral .blob{background:rgba(216,90,48,.11)}.nc.dark .blob{background:rgba(255,255,255,.05)}
 .nc-icon{width:44px;height:44px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.nc.green .nc-icon{border:0.5px solid #C0DD97}
-.nc.purple .nc-icon{border:0.5px solid #AFA9EC}
-.nc.coral .nc-icon{border:0.5px solid #F5C4B3}
-.nc.stats-card .nc-icon{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15)}
+.nc.green .nc-icon{border:0.5px solid #C0DD97}.nc.purple .nc-icon{border:0.5px solid #AFA9EC}
+.nc.coral .nc-icon{border:0.5px solid #F5C4B3}.nc.dark .nc-icon{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.15)}
 .nc-title{font-size:15px;font-weight:500;margin:0 0 2px;z-index:1;position:relative}
-.nc.green .nc-title{color:#27500A}.nc.purple .nc-title{color:#26215C}.nc.coral .nc-title{color:#4A1B0C}
-.nc.stats-card .nc-title{color:#fff}
+.nc.green .nc-title{color:#27500A}.nc.purple .nc-title{color:#26215C}.nc.coral .nc-title{color:#4A1B0C}.nc.dark .nc-title{color:#fff}
 .nc-sub{font-size:12px;margin:0;z-index:1;position:relative}
-.nc.green .nc-sub{color:#3B6D11}.nc.purple .nc-sub{color:#534AB7}.nc.coral .nc-sub{color:#993C1D}
-.nc.stats-card .nc-sub{color:rgba(255,255,255,.5)}
-.nc-arrow{font-size:18px;margin-left:auto;flex-shrink:0;z-index:1}
-.nc.green .nc-arrow{color:#3B6D11}.nc.purple .nc-arrow{color:#534AB7}.nc.coral .nc-arrow{color:#993C1D}
-.nc.stats-card .nc-arrow{color:rgba(255,255,255,.6)}
-
-/* FOOTER */
+.nc.green .nc-sub{color:#3B6D11}.nc.purple .nc-sub{color:#534AB7}.nc.coral .nc-sub{color:#993C1D}.nc.dark .nc-sub{color:rgba(255,255,255,.5)}
+.nc-arrow{margin-left:auto;flex-shrink:0;z-index:1}
 .footer{display:flex;align-items:center;justify-content:space-between;padding-top:1rem;border-top:0.5px solid rgba(26,39,68,.08)}
 .footer-txt{font-size:11px;color:#aaa}
-.footer-icons{display:flex;gap:14px}
-.footer-icons a{color:#bbb;text-decoration:none;font-size:17px;transition:color .15s}
-.footer-icons a:hover{color:#555}
-
-/* TODAY EDIT HINT */
-.edit-hint{font-size:11px;color:rgba(255,255,255,.3);text-align:center;margin-top:10px}
+.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 </style>
 </head>
 <body>
@@ -89,119 +68,80 @@ body{font-family:'DM Sans',sans-serif;background:#f0ede8;min-height:100vh;displa
       </div>
       <div class="stats-row">
         <div class="stat">
-          <p class="stat-val green" id="stat-money">0</p>
+          <p class="stat-val green" id="stat-money"><span class="pulse">···</span></p>
           <p class="stat-label">spent today</p>
           <p class="stat-sub">soʻm</p>
         </div>
         <div class="stat">
-          <p class="stat-val coral" id="stat-tasks">0</p>
+          <p class="stat-val coral" id="stat-tasks"><span class="pulse">···</span></p>
           <p class="stat-label">tasks today</p>
-          <p class="stat-sub">personal</p>
+          <p class="stat-sub">pending</p>
         </div>
         <div class="stat">
-          <p class="stat-val purple" id="stat-study">0</p>
+          <p class="stat-val purple" id="stat-study"><span class="pulse">···</span></p>
           <p class="stat-label">study tasks</p>
           <p class="stat-sub">pending</p>
         </div>
       </div>
-      <p class="edit-hint">Numbers update automatically from each section</p>
     </div>
   </div>
-
   <div class="body">
     <p class="sec-label">Sections</p>
     <div class="nav-cards">
-
       <a href="finances.html" class="nc green">
-        <div class="nc-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-        </div>
-        <div>
-          <p class="nc-title">Finances</p>
-          <p class="nc-sub">Income · Expenses · Budget</p>
-        </div>
+        <div class="nc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+        <div><p class="nc-title">Finances</p><p class="nc-sub">Income · Expenses · Budget</p></div>
         <div class="blob"></div>
         <svg class="nc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
-
       <a href="study.html" class="nc purple">
-        <div class="nc-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </div>
-        <div>
-          <p class="nc-title">Study tasks</p>
-          <p class="nc-sub">Goals · Sessions · Progress</p>
-        </div>
+        <div class="nc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+        <div><p class="nc-title">Study tasks</p><p class="nc-sub">Goals · Sessions · Progress</p></div>
         <div class="blob"></div>
         <svg class="nc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
-
       <a href="tasks.html" class="nc coral">
-        <div class="nc-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        </div>
-        <div>
-          <p class="nc-title">Personal tasks</p>
-          <p class="nc-sub">Habits · To-dos · Reminders</p>
-        </div>
+        <div class="nc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div><p class="nc-title">Personal tasks</p><p class="nc-sub">Habits · To-dos · Reminders</p></div>
         <div class="blob"></div>
         <svg class="nc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
-
-      <a href="statistics.html" class="nc stats-card">
-        <div class="nc-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-        <div>
-          <p class="nc-title">Statistics</p>
-          <p class="nc-sub">History · Charts · Summary</p>
-        </div>
+      <a href="statistics.html" class="nc dark">
+        <div class="nc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div><p class="nc-title">Statistics</p><p class="nc-sub">History · Charts · Summary</p></div>
         <div class="blob"></div>
         <svg class="nc-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
-
     </div>
-
-    <div class="footer">
-      <p class="footer-txt">S.Zufar · Personal dashboard</p>
-      <div class="footer-icons">
-        <a href="statistics.html" title="Statistics">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </a>
-      </div>
-    </div>
+    <div class="footer"><p class="footer-txt">S.Zufar · Personal dashboard</p></div>
   </div>
 </div>
-
 <script>
-// ── Date & greeting ──────────────────────────────
-const now = new Date();
-const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-document.getElementById('today-date').textContent =
-  `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
-const h = now.getHours();
-document.getElementById('greeting').textContent =
-  h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-
-// ── Load today's stats from localStorage ─────────
-function loadStats() {
-  const today = now.toISOString().slice(0,10);
-  const fin = JSON.parse(localStorage.getItem('zufar_finances') || '[]');
-  const tasks = JSON.parse(localStorage.getItem('zufar_tasks') || '[]');
-  const study = JSON.parse(localStorage.getItem('zufar_study') || '[]');
-
-  const todaySpent = fin
-    .filter(e => e.date === today && e.type === 'expense')
-    .reduce((s, e) => s + Number(e.amount), 0);
-
-  const todayTasks = tasks.filter(t => t.date === today && !t.done).length;
-  const studyPending = study.filter(t => !t.done).length;
-
-  document.getElementById('stat-money').textContent =
-    todaySpent > 0 ? todaySpent.toLocaleString('uz-UZ') : '0';
-  document.getElementById('stat-tasks').textContent = todayTasks;
-  document.getElementById('stat-study').textContent = studyPending;
+const SB_URL='https://wpireudvgdzxrehwmvh.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndwaXJldWR2Z2R6enhyZWhobXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjc0MDQsImV4cCI6MjA5NDg0MzQwNH0.GmqFUj3cuYHxlI_jvf1LjilS_mDVxEUeZxzZI-wDEBs';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const UID='zufar';
+const now=new Date();
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+document.getElementById('today-date').textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+const h=now.getHours();
+document.getElementById('greeting').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+async function loadStats(){
+  const today=now.toISOString().slice(0,10);
+  try{
+    const[finRes,tasksRes,studyRes]=await Promise.all([
+      sb.from('finances').select('amount').eq('user_id',UID).eq('type','expense').eq('date',today),
+      sb.from('personal_tasks').select('id').eq('user_id',UID).eq('done',false),
+      sb.from('study_tasks').select('id').eq('user_id',UID).eq('done',false)
+    ]);
+    const spent=(finRes.data||[]).reduce((s,e)=>s+Number(e.amount),0);
+    document.getElementById('stat-money').textContent=spent>0?spent.toLocaleString('uz-UZ'):'0';
+    document.getElementById('stat-tasks').textContent=(tasksRes.data||[]).length;
+    document.getElementById('stat-study').textContent=(studyRes.data||[]).length;
+  }catch(e){
+    ['stat-money','stat-tasks','stat-study'].forEach(id=>document.getElementById(id).textContent='—');
+  }
 }
 loadStats();
 </script>
